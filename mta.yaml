@@ -1,0 +1,46 @@
+---
+_schema-version: '3.1'
+ID: az-private-linky-cap
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+   
+build-parameters:
+  before-all:
+   - builder: custom
+     commands:
+      - npm install --production
+
+modules:
+ # --------------------- SERVER MODULE ------------------------
+ - name: az-private-linky-cap-srv
+ # ------------------------------------------------------------
+   type: nodejs
+   path: gen/srv
+   parameters:
+      buildpack: nodejs_buildpack
+   build-parameters:
+     builder: npm
+   requires:
+    - name: az-private-link
+    - name: az-destinations
+   provides:
+    - name: srv-api      # required by consumers of CAP services (e.g. approuter)
+      properties:
+        srv-url: ${default-url}
+
+resources:
+  # PrivateLink Service
+  - name: az-private-link
+    parameters:
+      service: privatelink
+      service-name: az-private-link
+      service-plan: standard
+    type: org.cloudfoundry.managed-service
+  # Destination Service
+  - name: az-destinations
+    parameters:
+      service: destination
+      service-plan: lite
+    type: org.cloudfoundry.managed-service
